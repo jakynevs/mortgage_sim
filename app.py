@@ -4,9 +4,10 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
+# POST request to add new client 
 @app.route('/client', methods=['POST'])
 def add_client():
-    # Info to add client
+    # Breakdown of client data
     data = request.json
     name = data.get('name')
     dni = data.get('dni')
@@ -26,12 +27,24 @@ def add_client():
 
     return jsonify({'message': 'Client added successfully'}), 201
     
-
-@app.route('/client/<client_id>', methods=['GET', 'PUT', 'DELETE'])
-def get_client():
-    # Info to retrieve client
+# GET, PUT and DELETE requests for individual client
+@app.route('/client/<dni>', methods=['GET', 'PUT', 'DELETE'])
+def get_client(dni):
+    if request.method == "GET":
+        conn = create_connection()  
+        cursor = conn.cursor()     
+        cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
     
-    pass
+    client = cursor.fetchall()
+    conn.close() # Need to close?
+    
+    return jsonify(client)
+    
+    # if client:
+    #     client_data = {key: client[key] for key in client.keys()} 
+    #     return jsonify(client_data)
+    # else:
+    #     return jsonify({'error': 'Client not found'}), 404
 
 @app.route('/client/mortgage_sim/<client_id>', methods=['GET'])
 def get_mortgage_sim():
