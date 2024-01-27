@@ -46,11 +46,27 @@ def get_client(dni):
     # else:
     #     return jsonify({'error': 'Client not found'}), 404
 
-@app.route('/client/mortgage_sim/<client_id>', methods=['GET'])
-def get_mortgage_sim():
+@app.route('/client/mortgage_sim/<dni>', methods=['POST'])
+def get_mortgage_sim(dni):
     # Info to retrieve mortgage simulation of a given client
+    data = request.json
     
-    pass
+    conn = create_connection()  
+    cursor = conn.cursor()     
+    cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
+    client = cursor.fetchall()
+    client_data = client[0]  # Gets the first (and only) tuple from the list
+    
+    # Mortgage calculation inputs:
+    requested_capital = client_data[-1]  # Last element of the tuple
+    tae = data.get("tae")
+    repayment_term = data.get("repayment_term")
+
+    # Mortgage calculation
+
+    monthly_instalment = 0
+    total_payment = 0
+    return (monthly_instalment, total_payment)
 
 # @app.route('/client/<client_id>', methods=['PUT'])
 # def get_client():
