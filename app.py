@@ -35,7 +35,7 @@ def get_client(dni):
         cursor = conn.cursor()     
         cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
     
-        client = cursor.fetchall()
+        client = cursor.fetchone()
         conn.close() # Need to close?
 
         return jsonify( client)
@@ -44,14 +44,14 @@ def get_client(dni):
         conn = create_connection()  
         cursor = conn.cursor()    
         cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
-        client = cursor.fetchall()
+        client = cursor.fetchone()
 
         if client:
             cursor.execute("DELETE FROM Client WHERE dni=?", (dni,))
             conn.commit()
 
             cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
-            client = cursor.fetchall()
+            client = cursor.fetchone()
 
             if not client:
                 conn.close()
@@ -64,8 +64,44 @@ def get_client(dni):
         else:
         # Client does not exist
             conn.close()
-            return jsonify({'error': 'Client not found'})
+            return jsonify({'error': 'Client not found'}), 404
 
+    if request.method == "PUT": #Check Idempotency: A PUT request is idempotent, meaning that making the same request multiple times should produce the same result. Ensure your implementation adheres to this principle.
+        data = request.json
+        name = data.get("name")
+        email = data.get("email")
+        requested_capital = data.get("requested_capital")
+
+        conn = create_connection()  
+        cursor = conn.cursor()    
+
+        cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
+        client = cursor.fetchone()
+
+        if client:
+            cursor.execute(''' 
+                UPDATE Client
+                SET name = ? ,
+                email = ? ,
+                requested_capital = ?
+                WHERE dni = ?
+                ''', (name, email, requested_capital, dni,))
+            
+            conn.commit()
+
+            # Confirm successful update
+            cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
+            updated_client = cursor.fetchone()
+
+            if updated_client:
+                return jsonify({'message': 'Client successfully updated'}), 200
+            else:
+                return jsonify({'error': 'Update failed'}), 500
+
+
+        else: 
+            conn.close()
+            return jsonify({'error': 'Client not found'}), 404
     
     
     # if client:
@@ -82,12 +118,12 @@ def get_mortgage_sim(dni):
     conn = create_connection()  
     cursor = conn.cursor()     
     cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
-    client = cursor.fetchall()
-    client_data = client[0]  # Gets the first (and only) tuple from the list
-    client_id = client_data[0]  # First element of the tuple 
+    client = cursor.fetchone()
+
+    client_id = client[0]  # Find client_id from data 
     
     # Mortgage calculation inputs:
-    requested_capital = client_data[-1]  # Last element of the tuple
+    requested_capital = client[-1]  # Last element of the tuple
     tae = data.get("tae")
     repayment_term = data.get("repayment_term")
     i = tae / 100 / 12 # Monthly interest rate
