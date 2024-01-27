@@ -35,10 +35,38 @@ def get_client(dni):
         cursor = conn.cursor()     
         cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
     
-    client = cursor.fetchall()
-    conn.close() # Need to close?
+        client = cursor.fetchall()
+        conn.close() # Need to close?
+
+        return jsonify( client)
     
-    return jsonify(client)
+    if request.method == "DELETE":
+        conn = create_connection()  
+        cursor = conn.cursor()    
+        cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
+        client = cursor.fetchall()
+
+        if client:
+            cursor.execute("DELETE FROM Client WHERE dni=?", (dni,))
+            conn.commit()
+
+            cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
+            client = cursor.fetchall()
+
+            if not client:
+                conn.close()
+                return jsonify({'message': 'Resource deleted successfully'}), 200
+            
+            else:
+                conn.close()
+                return jsonify({'error': 'Deletion failed'}), 500
+        
+        else:
+        # Client does not exist
+            conn.close()
+            return jsonify({'error': 'Client not found'})
+
+    
     
     # if client:
     #     client_data = {key: client[key] for key in client.keys()} 
@@ -80,8 +108,8 @@ def get_mortgage_sim(dni):
     conn.close()
     
     return jsonify({
-        'monthly_instalment': monthly_instalment,
-        "total": total
+        'monthly_instalment': round(monthly_instalment, 2),
+        "total": round(total, 2)
         }), 200
 
 if __name__ == '__main__':
