@@ -56,23 +56,33 @@ def get_mortgage_sim(dni):
     cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
     client = cursor.fetchall()
     client_data = client[0]  # Gets the first (and only) tuple from the list
+    client_id = client_data[0]  # First element of the tuple 
     
     # Mortgage calculation inputs:
     requested_capital = client_data[-1]  # Last element of the tuple
     tae = data.get("tae")
     repayment_term = data.get("repayment_term")
+    i = tae / 100 / 12 # Monthly interest rate
+    n = repayment_term * 12 # Repayment term in months
 
     # Mortgage calculation
+    # Return to 2 decimal places
+    monthly_instalment = requested_capital * i / (1 - (1 + i) ** (-n))
+    total = monthly_instalment * n
 
-    monthly_instalment = 0
-    total_payment = 0
-    return (monthly_instalment, total_payment)
-
-# @app.route('/client/<client_id>', methods=['PUT'])
-# def get_client():
-#     # Info to retrieve client
+    # Add data to DB
+    conn = create_connection()
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO MortgageSimulation (client_id, tae, repayment_term, monthly_instalment, total) VALUES (?, ?, ?, ?, ?)',
+                   (client_id, tae, repayment_term, monthly_instalment, total))
     
-#     pass
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        'monthly_instalment': monthly_instalment,
+        "total": total
+        }), 200
 
 if __name__ == '__main__':
     app.run(debug=True)  # Start the Flask app
