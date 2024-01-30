@@ -5,8 +5,8 @@ import re
 # Create instance of Flask class
 app = Flask(__name__)
 
-# Input validation of dni numbers
-def validate_dni(dni):
+# Function to validate dni input
+def valid_dni(dni):
     
     # Official table numbers corresponding from 0 > 22 
     official_number_table = "TRWAGMYFPDXBNJZSQVHLCKE"
@@ -29,6 +29,28 @@ def validate_dni(dni):
 
     # Check if letter meets official guidelines
     return letter == official_number_table[number % 23]
+
+# Function to validate name input
+def valid_name(name):
+    if not isinstance(name, str) or len(name) > 100:
+        return False
+    else:
+        return True
+
+# Function to validate email input
+def valid_email(email):
+    email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+    if not re.fullmatch(email_regex, email):
+        return False
+    else:
+        return True
+
+# Function to validate requested_capital input
+def valid_requested_capital(requested_capital):
+    if not isinstance(requested_capital, (int, float)) or requested_capital <= 0:
+        return False
+    else:
+        return True
 
 # Function to retrieve client from DB using dni
 def get_client_by_dni(dni):
@@ -53,22 +75,21 @@ def add_client():
     requested_capital = data.get('requested_capital')
     
     # Name validation:
-    if not name or not isinstance(name, str) or len(name) > 100:
+    if not name or not valid_name(name):
         return jsonify({"error": "Invalid or missing name"}), 400
 
     # DNI validation:
-    if not dni or not validate_dni(dni):
+    if not dni or not valid_dni(dni):
         return jsonify({"error": "Invalid or missing dni"}), 400
     
     # Email validation:
-    email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
-    if not email or not re.fullmatch(email_regex, email):
+    if not email or not valid_email(email):
         return jsonify({"error": "Invalid or missing email"}), 400
     
     # Requested capital validation:
     if not requested_capital:
         return jsonify({"error": "requested_capital missing"}), 400
-    if not isinstance(requested_capital, (int, float)) or requested_capital <= 0:
+    if not valid_requested_capital(requested_capital):
         return jsonify({"error": "requested_capital must be a positive number"}), 400
     
     #Insert data to DB
@@ -87,7 +108,7 @@ def add_client():
 def get_client(dni):
     
     # Validation of DNI
-    if not validate_dni(dni):
+    if not valid_dni(dni):
         return jsonify({"error": "Invalid dni"}), 400
     
     client = get_client_by_dni(dni)
@@ -102,7 +123,7 @@ def get_client(dni):
 def delete_client(dni):   
     
     # Validation of DNI
-    if not validate_dni(dni):
+    if not valid_dni(dni):
         return jsonify({"error": "Invalid dni"}), 400
     
     client = get_client_by_dni(dni)
@@ -135,7 +156,7 @@ def delete_client(dni):
 def update_client(dni):
 
     # Validation of DNI
-    if not validate_dni(dni):
+    if not valid_dni(dni):
         return jsonify({"error": "Invalid dni"}), 400
     
     # Breakdown of client data in request body
@@ -144,6 +165,24 @@ def update_client(dni):
     email = data.get("email")
     requested_capital = data.get("requested_capital")
 
+    # Name validation:
+    if not name or not valid_name(name):
+        return jsonify({"error": "Invalid or missing name"}), 400
+
+    # DNI validation:
+    if not dni or not valid_dni(dni):
+        return jsonify({"error": "Invalid or missing dni"}), 400
+    
+    # Email validation:
+    if not email or not valid_email(email):
+        return jsonify({"error": "Invalid or missing email"}), 400
+    
+    # Requested capital validation:
+    if not requested_capital:
+        return jsonify({"error": "requested_capital missing"}), 400
+    if not valid_requested_capital(requested_capital):
+        return jsonify({"error": "requested_capital must be a positive number"}), 400
+    
     client = get_client_by_dni(dni)
     
     if client:
@@ -178,7 +217,7 @@ def update_client(dni):
 def get_mortgage_sim(dni):
     
     # Validation of DNI
-    if not validate_dni(dni):
+    if not valid_dni(dni):
         return jsonify({"error": "Invalid or missing DNI"}), 400
     
     client = get_client_by_dni(dni)
