@@ -27,98 +27,115 @@ def add_client():
 
     return jsonify({'message': 'Client added successfully'}), 201
     
-# GET, PUT and DELETE requests for individual client
-@app.route('/client/<dni>', methods=['GET', 'PUT', 'DELETE'])
-def get_client(dni):
-    if request.method == "GET":
-        conn = create_connection()  
-        cursor = conn.cursor()     
-        cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
-    
-        client = cursor.fetchone()
-        conn.close() # Need to close?
+def validate_dni(dni):
+    official_number_table = "TRWAGMYFPDXBNJZSQVHLCKE"
+    number = int(dni[:-1])
+    letter = dni[-1].upper()
 
-        return jsonify( client)
-    
-    if request.method == "DELETE":
-        conn = create_connection()  
-        cursor = conn.cursor()    
-        cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
-        client = cursor.fetchone()
+    remainder_letter = official_number_table[number % 23]
 
-        if client:
-            cursor.execute("DELETE FROM Client WHERE dni=?", (dni,))
-            conn.commit()
+    return letter == remainder_letter
 
-            cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
-            client = cursor.fetchone()
-
-            if not client:
-                conn.close()
-                return jsonify({'message': 'Resource deleted successfully'}), 200
-            
-            else:
-                conn.close()
-                return jsonify({'error': 'Deletion failed'}), 500
-        
-        else:
-        # Client does not exist
-            conn.close()
-            return jsonify({'error': 'Client not found'}), 404
-
-    if request.method == "PUT": #Check Idempotency: A PUT request is idempotent, meaning that making the same request multiple times should produce the same result. Ensure your implementation adheres to this principle.
-        data = request.json
-        name = data.get("name")
-        email = data.get("email")
-        requested_capital = data.get("requested_capital")
-
-        conn = create_connection()  
-        cursor = conn.cursor()    
-
-        cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
-        client = cursor.fetchone()
-
-        if client:
-            cursor.execute(''' 
-                UPDATE Client
-                SET name = ? ,
-                email = ? ,
-                requested_capital = ?
-                WHERE dni = ?
-                ''', (name, email, requested_capital, dni,))
-            
-            conn.commit()
-
-            # Confirm successful update
-            cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
-            updated_client = cursor.fetchone()
-
-            if updated_client:
-                return jsonify({'message': 'Client successfully updated'}), 200
-            else:
-                return jsonify({'error': 'Update failed'}), 500
-
-
-        else: 
-            conn.close()
-            return jsonify({'error': 'Client not found'}), 404
-    
-    
-    # if client:
-    #     client_data = {key: client[key] for key in client.keys()} 
-    #     return jsonify(client_data)
-    # else:
-    #     return jsonify({'error': 'Client not found'}), 404
-
-@app.route('/client/mortgage_sim/<dni>', methods=['POST'])
-def get_mortgage_sim(dni):
-    # Info to retrieve mortgage simulation of a given client
-    data = request.json
-    
+def get_client_by_dni(dni):
     conn = create_connection()  
     cursor = conn.cursor()     
     cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
     client = cursor.fetchone()
+    conn.close() 
+    return client
+
+# GET, PUT and DELETE requests for individual client
+@app.route('/client/<dni>', methods=['GET'])
+def get_client(dni):
+    if not validate_dni(dni):
+        return jsonify({"error": "Invalid DNI"}), 400
+    
+    client = get_client_by_dni(dni)
+    
+    if client:
+        return jsonify(client)
+    else:
+        return jsonify({'error': 'Client not found'}), 404
+ 
+
+@app.route('/client/<dni>', methods=['DELETE'])
+def delete_client(dni):
+    if not validate_dni(dni):
+        return jsonify({"error": "Invalid DNI"}), 400
+    
+    client = get_client_by_dni(dni)
+    
+    conn = create_connection()  
+    cursor = conn.cursor()    
+
+    if client:
+        cursor.execute("DELETE FROM Client WHERE dni=?", (dni,))
+        conn.commit()
+
+        client = get_client_by_dni(dni)
+
+        if not client:
+            conn.close()
+            return jsonify({'message': 'Resource deleted successfully'}), 200
+        
+        else:
+            conn.close()
+            return jsonify({'error': 'Deletion failed'}), 500
+    
+    else:
+        return jsonify({'error': 'Client not found'}), 404
+
+@app.route('/client/<dni>', methods=['PUT'])
+def update_client(dni):
+    #Check Idempotency: A PUT request is idempotent, meaning that making the same request multiple times should produce the same result. Ensure your implementation adheres to this principle.
+    if not validate_dni(dni):
+        return jsonify({"error": "Invalid DNI"}), 400
+    
+    data = request.json
+    name = data.get("name")
+    email = data.get("email")
+    requested_capital = data.get("requested_capital")
+
+    conn = create_connection()  
+    cursor = conn.cursor()    
+
+    client = get_client_by_dni(dni)
+
+    if client:
+        cursor.execute(''' 
+            UPDATE Client
+            SET name = ? ,
+            email = ? ,
+            requested_capital = ?
+            WHERE dni = ?
+            ''', (name, email, requested_capital, dni,))
+        
+        conn.commit()
+
+        # Confirm successful update
+        updated_client = get_client_by_dni(dni)
+
+        if updated_client:
+            return jsonify({'message': 'Client successfully updated'}), 200
+        else:
+            return jsonify({'error': 'Update failed'}), 500
+
+    else: 
+        conn.close()
+        return jsonify({'error': 'Client not found'}), 404
+
+@app.route('/client/mortgage_sim/<dni>', methods=['POST'])
+def get_mortgage_sim(dni):
+    # Info to retrieve mortgage simulation of a given client
+    if not validate_dni(dni):
+        return jsonify({"error": "Invalid DNI"}), 400
+    
+    data = request.json
+    
+    conn = create_connection()  
+    cursor = conn.cursor()     
+    
+    client = get_client_by_dni(dni)
 
     client_id = client[0]  # Find client_id from data 
     
