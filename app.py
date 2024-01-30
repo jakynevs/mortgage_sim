@@ -1,5 +1,6 @@
 from db_setup import create_connection
 from flask import Flask, jsonify, request
+import re
 
 # Create instance of Flask class
 app = Flask(__name__)
@@ -51,9 +52,24 @@ def add_client():
     email = data.get('email')
     requested_capital = data.get('requested_capital')
     
-    # Validation of DNI given before creating client in DB
-    if not validate_dni(dni):
-        return jsonify({"error": "Invalid DNI"}), 400
+    # Name validation:
+    if not name or not isinstance(name, str) or len(name) > 100:
+        return jsonify({"error": "Invalid or missing name"}), 400
+
+    # DNI validation:
+    if not dni or not validate_dni(dni):
+        return jsonify({"error": "Invalid or missing dni"}), 400
+    
+    # Email validation:
+    email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+    if not email or not re.fullmatch(email_regex, email):
+        return jsonify({"error": "Invalid or missing email"}), 400
+    
+    # Requested capital validation:
+    if not requested_capital:
+        return jsonify({"error": "requested_capital missing"}), 400
+    if not isinstance(requested_capital, (int, float)) or requested_capital <= 0:
+        return jsonify({"error": "requested_capital must be a positive number"}), 400
     
     #Insert data to DB
     conn = create_connection()
@@ -72,7 +88,7 @@ def get_client(dni):
     
     # Validation of DNI
     if not validate_dni(dni):
-        return jsonify({"error": "Invalid DNI"}), 400
+        return jsonify({"error": "Invalid dni"}), 400
     
     client = get_client_by_dni(dni)
     
@@ -87,7 +103,7 @@ def delete_client(dni):
     
     # Validation of DNI
     if not validate_dni(dni):
-        return jsonify({"error": "Invalid DNI"}), 400
+        return jsonify({"error": "Invalid dni"}), 400
     
     client = get_client_by_dni(dni)
     
@@ -120,7 +136,7 @@ def update_client(dni):
 
     # Validation of DNI
     if not validate_dni(dni):
-        return jsonify({"error": "Invalid DNI"}), 400
+        return jsonify({"error": "Invalid dni"}), 400
     
     # Breakdown of client data in request body
     data = request.json
@@ -163,7 +179,7 @@ def get_mortgage_sim(dni):
     
     # Validation of DNI
     if not validate_dni(dni):
-        return jsonify({"error": "Invalid DNI"}), 400
+        return jsonify({"error": "Invalid or missing DNI"}), 400
     
     client = get_client_by_dni(dni)
     
@@ -177,10 +193,21 @@ def get_mortgage_sim(dni):
     tae = data.get("tae")
     repayment_term = data.get("repayment_term")
 
+    # TAE validation:
+    if tae is None:
+        return jsonify({"error": "tae missing"}), 400
+    if not isinstance(tae, (int, float)) or tae <= 0 or tae > 100:
+        return jsonify({"error": "tae must be a positive number and less than 100"}), 400
+
+    # Repayment term validation:
+    if repayment_term is None:
+        return jsonify({"error": "repayment_term missing"}), 400
+    if not isinstance(repayment_term, (int)) or repayment_term <= 0 or repayment_term > 40:
+        return jsonify({"error": "repayment_term must be a positive number and less than 40 years"}), 400
+
     # Retrieve requested capital from client info.
     requested_capital = client[-1]  
 
-    # Validate inputs:
     # Monthly interest rate
     i = tae / 100 / 12 
     # Repayment term in months
