@@ -74,6 +74,10 @@ def add_client():
     email = data.get('email')
     requested_capital = data.get('requested_capital')
     
+    # Check if there is already someone with this dni in db:
+    if get_client_by_dni(dni):
+        return jsonify({"error": "Client with this dni already exists"}), 400
+
     # Name validation:
     if not name or not valid_name(name):
         return jsonify({"error": "Invalid or missing name"}), 400
@@ -155,7 +159,7 @@ def delete_client(dni):
 @app.route('/client/<dni>', methods=['PUT'])
 def update_client(dni):
 
-    # Validation of DNI
+    # Validation of dni in url
     if not valid_dni(dni):
         return jsonify({"error": "Invalid dni"}), 400
     
@@ -165,14 +169,25 @@ def update_client(dni):
     email = data.get("email")
     requested_capital = data.get("requested_capital")
 
+    # Handling of new dni:
+    if data.get("dni") and dni != data.get("dni"):
+        new_dni = data.get("dni")
+        
+        # new_dni validation:
+        if not valid_dni(new_dni):
+            return jsonify({"error": "Invalid dni"}), 400
+        
+        # Check that new_dni isn't duplicate:
+        if get_client_by_dni(new_dni):
+            return jsonify({"error": "Client with this dni already exists"}), 400
+    
+    else:
+        new_dni = dni
+        
     # Name validation:
     if not name or not valid_name(name):
         return jsonify({"error": "Invalid or missing name"}), 400
 
-    # DNI validation:
-    if not dni or not valid_dni(dni):
-        return jsonify({"error": "Invalid or missing dni"}), 400
-    
     # Email validation:
     if not email or not valid_email(email):
         return jsonify({"error": "Invalid or missing email"}), 400
@@ -193,16 +208,17 @@ def update_client(dni):
         cursor.execute(''' 
             UPDATE Client
             SET name = ? ,
+            dni = ?
             email = ? ,
             requested_capital = ?
             WHERE dni = ?
-            ''', (name, email, requested_capital, dni,))
+            ''', (name, new_dni, email, requested_capital, dni,))
         
         conn.commit()
         conn.close()
 
         # Confirm successful update
-        updated_client = get_client_by_dni(dni)
+        updated_client = get_client_by_dni(new_dni)
 
         if updated_client:
             return jsonify({'message': 'Client successfully updated'}), 200
