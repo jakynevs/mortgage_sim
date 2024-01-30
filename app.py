@@ -1,34 +1,20 @@
 from db_setup import create_connection
 from flask import Flask, jsonify, request
-# import sqlite3
 
+# Create instance of Flask class
 app = Flask(__name__)
 
-# POST request to add new client 
-@app.route('/client', methods=['POST'])
-def add_client():
-    # Breakdown of client data
-    data = request.json
-    name = data.get('name')
-    dni = data.get('dni')
-    email = data.get('email')
-    requested_capital = data.get('requested_capital')
-
-    # validate dni
-    # handle null values
-    
-    #Insert data to DB
-    conn = create_connection()
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO Client (name, dni, email, requested_capital) VALUES (?, ?, ?, ?)',
-                   (name, dni, email, requested_capital))
-    conn.commit()
-    conn.close()
-
-    return jsonify({'message': 'Client added successfully'}), 201
-    
 def validate_dni(dni):
     official_number_table = "TRWAGMYFPDXBNJZSQVHLCKE"
+    first_digit = dni[0]
+    
+    if first_digit.upper() == "X":
+        dni = "0" + dni[1:]
+    if first_digit.upper() == "Y":
+        dni = "1" + dni[1:]
+    if first_digit.upper() == "Z":
+        dni = "2" + dni[1:]
+    
     number = int(dni[:-1])
     letter = dni[-1].upper()
 
@@ -43,6 +29,31 @@ def get_client_by_dni(dni):
     client = cursor.fetchone()
     conn.close() 
     return client
+# POST request to add new client 
+@app.route('/client', methods=['POST'])
+def add_client():
+    # Breakdown of client data
+    data = request.json
+    name = data.get('name')
+    dni = data.get('dni')
+    email = data.get('email')
+    requested_capital = data.get('requested_capital')
+    
+    if not validate_dni(dni):
+        return jsonify({"error": "Invalid DNI"}), 400
+    # validate dni
+    # handle null values
+    
+    #Insert data to DB
+    conn = create_connection()
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO Client (name, dni, email, requested_capital) VALUES (?, ?, ?, ?)',
+                   (name, dni, email, requested_capital))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'Client added successfully'}), 201
+    
 
 # GET, PUT and DELETE requests for individual client
 @app.route('/client/<dni>', methods=['GET'])
