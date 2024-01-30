@@ -4,10 +4,15 @@ from flask import Flask, jsonify, request
 # Create instance of Flask class
 app = Flask(__name__)
 
+# Input validation of dni numbers
 def validate_dni(dni):
-    official_number_table = "TRWAGMYFPDXBNJZSQVHLCKE"
-    first_digit = dni[0]
     
+    # Official table numbers corresponding from 0 > 22 
+    official_number_table = "TRWAGMYFPDXBNJZSQVHLCKE"
+
+    # Logic to deal with foreginer NIE's that start with a letter
+    first_digit = dni[0]
+
     if first_digit.upper() == "X":
         dni = "0" + dni[1:]
     if first_digit.upper() == "Y":
@@ -15,13 +20,16 @@ def validate_dni(dni):
     if first_digit.upper() == "Z":
         dni = "2" + dni[1:]
     
+    # Get number part of dni
     number = int(dni[:-1])
+
+    # Get last letter of dni
     letter = dni[-1].upper()
 
-    remainder_letter = official_number_table[number % 23]
+    # Check if letter meets official guidelines
+    return letter == official_number_table[number % 23]
 
-    return letter == remainder_letter
-
+# Function to retrieve client from DB using dni
 def get_client_by_dni(dni):
     conn = create_connection()  
     cursor = conn.cursor()     
@@ -29,9 +37,13 @@ def get_client_by_dni(dni):
     client = cursor.fetchone()
     conn.close() 
     return client
+
+# ENDPOINTS:
+
 # POST request to add new client 
 @app.route('/client', methods=['POST'])
 def add_client():
+    
     # Breakdown of client data
     data = request.json
     name = data.get('name')
@@ -39,10 +51,9 @@ def add_client():
     email = data.get('email')
     requested_capital = data.get('requested_capital')
     
+    # Validation of DNI given before creating client in DB
     if not validate_dni(dni):
         return jsonify({"error": "Invalid DNI"}), 400
-    # validate dni
-    # handle null values
     
     #Insert data to DB
     conn = create_connection()
@@ -55,9 +66,11 @@ def add_client():
     return jsonify({'message': 'Client added successfully'}), 201
     
 
-# GET, PUT and DELETE requests for individual client
+# GET request to retrieve individual client
 @app.route('/client/<dni>', methods=['GET'])
 def get_client(dni):
+    
+    # Validation of DNI
     if not validate_dni(dni):
         return jsonify({"error": "Invalid DNI"}), 400
     
@@ -68,9 +81,11 @@ def get_client(dni):
     else:
         return jsonify({'error': 'Client not found'}), 404
  
-
+# DELETE request to delete individual client
 @app.route('/client/<dni>', methods=['DELETE'])
-def delete_client(dni):
+def delete_client(dni):   
+    
+    # Validation of DNI
     if not validate_dni(dni):
         return jsonify({"error": "Invalid DNI"}), 400
     
@@ -80,39 +95,46 @@ def delete_client(dni):
     cursor = conn.cursor()    
 
     if client:
+        
+        # Delete from DB
         cursor.execute("DELETE FROM Client WHERE dni=?", (dni,))
         conn.commit()
+        conn.close()
 
         client = get_client_by_dni(dni)
 
+        # Confirmation that client has been deleted
         if not client:
-            conn.close()
             return jsonify({'message': 'Resource deleted successfully'}), 200
         
+        # Error handling if still a matching client with given DNI
         else:
-            conn.close()
             return jsonify({'error': 'Deletion failed'}), 500
     
     else:
         return jsonify({'error': 'Client not found'}), 404
 
+# PUT request to update individual client
 @app.route('/client/<dni>', methods=['PUT'])
 def update_client(dni):
-    #Check Idempotency: A PUT request is idempotent, meaning that making the same request multiple times should produce the same result. Ensure your implementation adheres to this principle.
+
+    # Validation of DNI
     if not validate_dni(dni):
         return jsonify({"error": "Invalid DNI"}), 400
     
+    # Breakdown of client data in request body
     data = request.json
     name = data.get("name")
     email = data.get("email")
     requested_capital = data.get("requested_capital")
 
-    conn = create_connection()  
-    cursor = conn.cursor()    
-
     client = get_client_by_dni(dni)
-
+    
     if client:
+        conn = create_connection()  
+        cursor = conn.cursor()    
+
+        # SQL to update client in DB
         cursor.execute(''' 
             UPDATE Client
             SET name = ? ,
@@ -122,6 +144,7 @@ def update_client(dni):
             ''', (name, email, requested_capital, dni,))
         
         conn.commit()
+        conn.close()
 
         # Confirm successful update
         updated_client = get_client_by_dni(dni)
@@ -132,33 +155,38 @@ def update_client(dni):
             return jsonify({'error': 'Update failed'}), 500
 
     else: 
-        conn.close()
         return jsonify({'error': 'Client not found'}), 404
 
+# POST request for Mortgage Simulation
 @app.route('/client/mortgage_sim/<dni>', methods=['POST'])
 def get_mortgage_sim(dni):
-    # Info to retrieve mortgage simulation of a given client
+    
+    # Validation of DNI
     if not validate_dni(dni):
         return jsonify({"error": "Invalid DNI"}), 400
     
-    data = request.json
-    
-    conn = create_connection()  
-    cursor = conn.cursor()     
-    
     client = get_client_by_dni(dni)
-
-    client_id = client[0]  # Find client_id from data 
     
-    # Mortgage calculation inputs:
-    requested_capital = client[-1]  # Last element of the tuple
+    # Establish inputs for mortgage calculation:
+    
+    # Find client_id from data 
+    client_id = client[0]  
+    
+    # Breakdown of TAE and repayment term from request body
+    data = request.json
     tae = data.get("tae")
     repayment_term = data.get("repayment_term")
-    i = tae / 100 / 12 # Monthly interest rate
-    n = repayment_term * 12 # Repayment term in months
 
-    # Mortgage calculation
-    # Return to 2 decimal places
+    # Retrieve requested capital from client info.
+    requested_capital = client[-1]  
+
+    # Validate inputs:
+    # Monthly interest rate
+    i = tae / 100 / 12 
+    # Repayment term in months
+    n = repayment_term * 12 
+
+    # Mortgage calculations
     monthly_instalment = requested_capital * i / (1 - (1 + i) ** (-n))
     total = monthly_instalment * n
 
@@ -171,10 +199,12 @@ def get_mortgage_sim(dni):
     conn.commit()
     conn.close()
     
+    # Return outputs to 2 decimal places
     return jsonify({
         'monthly_instalment': round(monthly_instalment, 2),
         "total": round(total, 2)
         }), 200
 
+# Start Flask application
 if __name__ == '__main__':
-    app.run(debug=True)  # Start the Flask app
+    app.run(debug=True)  
