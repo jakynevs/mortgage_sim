@@ -14,10 +14,7 @@ def create_connection():
         print(e)
     return conn
 
-# Remove this?
-# if __name__ == '__main__':
-#     create_connection('db/mortgage.db')
-
+# Function to create a table
 def create_table(conn, create_table_sql):
     """ create a table from the create_table_sql statement
     :param conn: Connection object
@@ -33,8 +30,7 @@ def create_table(conn, create_table_sql):
 def main():
     database = "db/mortgage.db"
 
-    # Check what can be null
-    # Check what are the best data types   
+    # SQL command to create client table
     sql_create_clients_table = """ CREATE TABLE IF NOT EXISTS Client (
                       id INTEGER PRIMARY KEY AUTOINCREMENT,
                       name TEXT NOT NULL,
@@ -43,6 +39,7 @@ def main():
                       requested_capital DECIMAL);
                       """
 
+    # SQL command to create mortgage sim table
     sql_create_mortgage_sim_table = """ CREATE TABLE IF NOT EXISTS MortgageSimulation (
                       id INTEGER PRIMARY KEY AUTOINCREMENT,
                       client_id INTEGER NOT NULL,
