@@ -261,7 +261,7 @@ def update_client(dni):
             cursor.execute(''' 
                 UPDATE Client
                 SET name = ? ,
-                dni = ?
+                dni = ? ,
                 email = ? ,
                 requested_capital = ?
                 WHERE dni = ?
