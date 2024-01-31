@@ -5,7 +5,7 @@
 
 ## Descripción del Proyecto
 
-Este proyecto es una API de simulación de hipoteca diseñada para calcular estimaciones de préstamos hipotecarios. Puede ser utilizada por instituciones financieras o desarrolladores para proporcionar a los usuarios una forma rápida y sencilla de estimar sus pagos hipotecarios mensuales y totales.
+Este proyecto es una API de simulación de hipoteca diseñada para calcular estimaciones de préstamos hipotecarios. Puede ser utilizada de manera rápida y sencilla para estimar sus pagos hipotecarios mensuales y totales.
 
 ## Documentación
 
