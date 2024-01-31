@@ -151,7 +151,7 @@ def get_client(dni):
     client = get_client_by_dni(dni)
     
     if client:
-        return jsonify(client)
+        return jsonify({"data": client}), 200
     else:
         return jsonify({'error': 'Client not found'}), 404
  
