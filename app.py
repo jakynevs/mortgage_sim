@@ -77,12 +77,23 @@ def get_client_by_dni(dni):
 @app.route('/client', methods=['POST'])
 def add_client():
     
-    # Breakdown of client data
+    expected_fields = {'name', 'dni', 'email', 'requested_capital'}
     data = request.json
+    
+    # Check for unexpected fields:
+    unexpected_fields = set(data.keys()) - expected_fields
+    if unexpected_fields:
+        return jsonify({"error": f"Unexpected fields: {unexpected_fields}"}), 400
+
+    # Breakdown of client data
     name = data.get('name')
     dni = data.get('dni')
     email = data.get('email')
     requested_capital = data.get('requested_capital')
+    
+    # DNI validation:
+    if not dni or not valid_dni(dni):
+        return jsonify({"error": "Invalid or missing dni"}), 400
     
     # Check if there is already someone with this dni in db:
     if get_client_by_dni(dni):
@@ -92,10 +103,6 @@ def add_client():
     if not name or not valid_name(name):
         return jsonify({"error": "Invalid or missing name"}), 400
 
-    # DNI validation:
-    if not dni or not valid_dni(dni):
-        return jsonify({"error": "Invalid or missing dni"}), 400
-    
     # Email validation:
     if not email or not valid_email(email):
         return jsonify({"error": "Invalid or missing email"}), 400
@@ -188,9 +195,16 @@ def update_client(dni):
     # Validation of dni in url
     if not valid_dni(dni):
         return jsonify({"error": "Invalid dni"}), 400
-    
-    # Breakdown of client data in request body
+
+    expected_fields = {'name', 'dni', 'email', 'requested_capital'}
     data = request.json
+    
+    # Check for unexpected fields:
+    unexpected_fields = set(data.keys()) - expected_fields
+    if unexpected_fields:
+        return jsonify({"error": f"Unexpected fields: {unexpected_fields}"}), 400
+        
+    # Breakdown of client data in request body
     name = data.get("name")
     email = data.get("email")
     requested_capital = data.get("requested_capital")
@@ -266,19 +280,24 @@ def update_client(dni):
 @app.route('/client/mortgage_sim/<dni>', methods=['POST'])
 def get_mortgage_sim(dni):
     
-    # Validation of DNI
+    # Validation of DNI in url
     if not valid_dni(dni):
         return jsonify({"error": "Invalid or missing DNI"}), 400
     
+    
+    expected_fields = {'tae', 'repayment_term'}
+    data = request.json
+    
+    # Check for unexpected fields:
+    unexpected_fields = set(data.keys()) - expected_fields
+    if unexpected_fields:
+        return jsonify({"error": f"Unexpected fields: {unexpected_fields}"}), 400
+    
+    # Find client and client_id 
     client = get_client_by_dni(dni)
-    
-    # Establish inputs for mortgage calculation:
-    
-    # Find client_id from data 
     client_id = client[0]  
     
     # Breakdown of TAE and repayment term from request body
-    data = request.json
     tae = data.get("tae")
     repayment_term = data.get("repayment_term")
 
