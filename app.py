@@ -54,12 +54,22 @@ def valid_requested_capital(requested_capital):
 
 # Function to retrieve client from DB using dni
 def get_client_by_dni(dni):
-    conn = create_connection()  
-    cursor = conn.cursor()     
-    cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
-    client = cursor.fetchone()
-    conn.close() 
-    return client
+    try:
+        conn = create_connection()  
+        cursor = conn.cursor()     
+
+        # SQL command to retrieve client:
+        cursor.execute("SELECT * FROM Client WHERE dni=?", (dni,))
+        client = cursor.fetchone()
+        return client
+    
+    except Exception as e:
+        # Log exception:
+        print(f"An error occurred: {e}")
+        return None
+    
+    finally:
+        conn.close()
 
 # ENDPOINTS:
 
@@ -97,12 +107,20 @@ def add_client():
         return jsonify({"error": "requested_capital must be a positive number"}), 400
     
     #Insert data to DB
-    conn = create_connection()
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO Client (name, dni, email, requested_capital) VALUES (?, ?, ?, ?)',
-                   (name, dni, email, requested_capital))
-    conn.commit()
-    conn.close()
+    try:
+        conn = create_connection()
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO Client (name, dni, email, requested_capital) VALUES (?, ?, ?, ?)',
+                    (name, dni, email, requested_capital))
+        conn.commit()
+    
+    except Exception as e:
+        # Log exception:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': 'Database operation failed'}), 500
+
+    finally:
+        conn.close()
 
     return jsonify({'message': 'Client added successfully'}), 201
     
@@ -137,10 +155,18 @@ def delete_client(dni):
 
     if client:
         
-        # Delete from DB
-        cursor.execute("DELETE FROM Client WHERE dni=?", (dni,))
-        conn.commit()
-        conn.close()
+        try:
+            # Delete from DB
+            cursor.execute("DELETE FROM Client WHERE dni=?", (dni,))
+            conn.commit()
+        
+        except Exception as e:
+            # Log exception:
+            print(f"An error occurred: {e}")
+            return jsonify({'error': 'Database operation failed'}), 500
+
+        finally:
+            conn.close()
 
         client = get_client_by_dni(dni)
 
@@ -201,21 +227,29 @@ def update_client(dni):
     client = get_client_by_dni(dni)
     
     if client:
-        conn = create_connection()  
-        cursor = conn.cursor()    
+        try:
+            conn = create_connection()  
+            cursor = conn.cursor()    
 
-        # SQL to update client in DB
-        cursor.execute(''' 
-            UPDATE Client
-            SET name = ? ,
-            dni = ?
-            email = ? ,
-            requested_capital = ?
-            WHERE dni = ?
-            ''', (name, new_dni, email, requested_capital, dni,))
+            # SQL to update client in DB
+            cursor.execute(''' 
+                UPDATE Client
+                SET name = ? ,
+                dni = ?
+                email = ? ,
+                requested_capital = ?
+                WHERE dni = ?
+                ''', (name, new_dni, email, requested_capital, dni,))
+            
+            conn.commit()
         
-        conn.commit()
-        conn.close()
+        except Exception as e:
+            # Log exception:
+            print(f"An error occurred: {e}")
+            return jsonify({'error': 'Database operation failed'}), 500
+
+        finally:
+            conn.close()
 
         # Confirm successful update
         updated_client = get_client_by_dni(new_dni)
@@ -273,13 +307,21 @@ def get_mortgage_sim(dni):
     total = monthly_instalment * n
 
     # Add data to DB
-    conn = create_connection()
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO MortgageSimulation (client_id, tae, repayment_term, monthly_instalment, total) VALUES (?, ?, ?, ?, ?)',
-                   (client_id, tae, repayment_term, monthly_instalment, total))
+    try:
+        conn = create_connection()
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO MortgageSimulation (client_id, tae, repayment_term, monthly_instalment, total) VALUES (?, ?, ?, ?, ?)',
+                    (client_id, tae, repayment_term, monthly_instalment, total))
+        
+        conn.commit()
+
+    except Exception as e:
+        # Log exception:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': 'Database operation failed'}), 500
     
-    conn.commit()
-    conn.close()
+    finally:
+        conn.close()
     
     # Return outputs to 2 decimal places
     return jsonify({
