@@ -8,8 +8,8 @@ app = Flask(__name__)
 # Function to validate dni input
 def valid_dni(dni):
     
-    # Check is 9 digits:
-    if len(dni) != 9:
+    # Check is 9 digits and a sting:
+    if len(dni) != 9 or type(dni) != str:
         return False
     
     # Official table numbers corresponding from 0 > 22 
