@@ -36,7 +36,7 @@ def main():
     # Check what can be null
     # Check what are the best data types   
     sql_create_clients_table = """ CREATE TABLE IF NOT EXISTS Client (
-                      client_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      id INTEGER PRIMARY KEY AUTOINCREMENT,
                       name TEXT NOT NULL,
                       dni TEXT UNIQUE NOT NULL,
                       email TEXT,
@@ -44,7 +44,7 @@ def main():
                       """
 
     sql_create_mortgage_sim_table = """ CREATE TABLE IF NOT EXISTS MortgageSimulation (
-                      mortgage_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      id INTEGER PRIMARY KEY AUTOINCREMENT,
                       client_id INTEGER NOT NULL,
                       tae DECIMAL NOT NULL,
                       repayment_term INTEGER NOT NULL,
