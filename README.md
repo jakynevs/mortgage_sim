@@ -49,4 +49,4 @@ python app.py
 http://localhost:5000
 ```
 
-Gracias por darme la oportunidad. Espero que el proyecto cumpla con los requisitos. Si tienen alguna pregunta, no duden en enviarme un correo electrónico.
+Gracias por darme la oportunidad. Espero que el proyecto cumpla con todos los requisitos. Si tienen alguna pregunta, no duden en enviarme un correo electrónico.
