@@ -296,7 +296,6 @@ def get_mortgage_sim(dni):
     if not valid_dni(dni):
         return jsonify({"error": "Invalid or missing DNI"}), 400
     
-    
     expected_fields = {'tae', 'repayment_term'}
     data = request.json
     
@@ -313,50 +312,54 @@ def get_mortgage_sim(dni):
     client = get_client_by_dni(dni)
     client_id = client[0]  
     
-    # Breakdown of TAE and repayment term from request body
-    tae = data.get("tae")
-    repayment_term = data.get("repayment_term")
+    if client:
 
-    # TAE validation:
-    if tae is None:
-        return jsonify({"error": "tae missing"}), 400
-    if not isinstance(tae, (int, float)) or tae <= 0 or tae > 100:
-        return jsonify({"error": "tae must be a positive number and less than 100"}), 400
+        # Breakdown of TAE and repayment term from request body
+        tae = data.get("tae")
+        repayment_term = data.get("repayment_term")
 
-    # Repayment term validation:
-    if repayment_term is None:
-        return jsonify({"error": "repayment_term missing"}), 400
-    if not isinstance(repayment_term, (int)) or repayment_term <= 0 or repayment_term > 40:
-        return jsonify({"error": "repayment_term must be a positive number and less than 40 years"}), 400
+        # TAE validation:
+        if tae is None:
+            return jsonify({"error": "tae missing"}), 400
+        if not isinstance(tae, (int, float)) or tae <= 0 or tae > 100:
+            return jsonify({"error": "tae must be a positive number and less than 100"}), 400
 
-    # Retrieve requested capital from client info.
-    requested_capital = client[-1]  
+        # Repayment term validation:
+        if repayment_term is None:
+            return jsonify({"error": "repayment_term missing"}), 400
+        if not isinstance(repayment_term, (int)) or repayment_term <= 0 or repayment_term > 40:
+            return jsonify({"error": "repayment_term must be a positive number and less than 40 years"}), 400
 
-    # Monthly interest rate
-    i = tae / 100 / 12 
-    # Repayment term in months
-    n = repayment_term * 12 
+        # Retrieve requested capital from client info.
+        requested_capital = client[-1]  
 
-    # Mortgage calculations
-    monthly_instalment = requested_capital * i / (1 - (1 + i) ** (-n))
-    total = monthly_instalment * n
+        # Monthly interest rate
+        i = tae / 100 / 12 
+        # Repayment term in months
+        n = repayment_term * 12 
 
-    # Add data to DB
-    try:
-        conn = create_connection()
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO MortgageSimulation (client_id, tae, repayment_term, monthly_instalment, total) VALUES (?, ?, ?, ?, ?)',
-                    (client_id, tae, repayment_term, monthly_instalment, total))
+        # Mortgage calculations
+        monthly_instalment = requested_capital * i / (1 - (1 + i) ** (-n))
+        total = monthly_instalment * n
+
+        # Add data to DB
+        try:
+            conn = create_connection()
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO MortgageSimulation (client_id, tae, repayment_term, monthly_instalment, total) VALUES (?, ?, ?, ?, ?)',
+                        (client_id, tae, repayment_term, monthly_instalment, total))
+            
+            conn.commit()
+
+        except Exception as e:
+            # Log exception:
+            print(f"An error occurred: {e}")
+            return jsonify({'error': 'Database operation failed'}), 500
         
-        conn.commit()
-
-    except Exception as e:
-        # Log exception:
-        print(f"An error occurred: {e}")
-        return jsonify({'error': 'Database operation failed'}), 500
-    
-    finally:
-        conn.close()
+        finally:
+            conn.close()
+    else:
+        return jsonify({'error': 'Client not found'}), 404
     
     # Return outputs to 2 decimal places
     return jsonify({
