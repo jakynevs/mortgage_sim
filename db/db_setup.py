@@ -1,7 +1,7 @@
 import sqlite3
 from sqlite3 import Error
 
-database = "db/mortgage.db"
+DATABASE = "db/mortgage.db"
 
 
 def create_connection():
@@ -12,7 +12,7 @@ def create_connection():
     """
     conn = None
     try:
-        conn = sqlite3.connect(database)
+        conn = sqlite3.connect(DATABASE)
     except Error as e:
         print(e)
     return conn

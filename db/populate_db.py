@@ -1,12 +1,12 @@
 import sqlite3
 
-db_file = "test_database.db"
+DB_FILE = "test_database.db"
 
 
 def create_connection():
     conn = None
     try:
-        conn = sqlite3.connect(db_file)
+        conn = sqlite3.connect(DB_FILE)
         return conn
     except Exception as e:
         print(e)
@@ -23,7 +23,6 @@ def create_client(conn, client):
 
 
 def main():
-    database = "db/test_database.db"
 
     # Create a database connection
     conn = create_connection()
