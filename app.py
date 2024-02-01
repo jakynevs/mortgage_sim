@@ -316,9 +316,9 @@ def get_mortgage_sim(dni):
     
     # Find client and client_id 
     client = get_client_by_dni(dni)
-    client_id = client[0]  
-    
     if client:
+        
+        client_id = client[0]  
 
         # Breakdown of TAE and repayment term from request body
         tae = data.get("tae")
