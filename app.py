@@ -212,6 +212,10 @@ def update_client(dni):
     if not valid_dni(dni):
         return jsonify({"error": "Invalid dni"}), 400
 
+    client = get_client_by_dni(dni)
+    if not client:
+        return jsonify({'error': 'Client not found'}), 404
+        
     expected_fields = {'name', 'dni', 'email', 'requested_capital'}
     data = request.json
     
@@ -258,43 +262,37 @@ def update_client(dni):
     if not valid_requested_capital(requested_capital):
         return jsonify({"error": "requested_capital must be a positive number"}), 400
     
-    client = get_client_by_dni(dni)
-    
-    if client:
-        try:
-            conn = create_connection()  
-            cursor = conn.cursor()    
+    try:
+        conn = create_connection()  
+        cursor = conn.cursor()    
 
-            # SQL to update client in DB
-            cursor.execute(''' 
-                UPDATE Client
-                SET name = ? ,
-                dni = ? ,
-                email = ? ,
-                requested_capital = ?
-                WHERE dni = ?
-                ''', (name, new_dni, email, requested_capital, dni,))
-            
-            conn.commit()
+        # SQL to update client in DB
+        cursor.execute(''' 
+            UPDATE Client
+            SET name = ? ,
+            dni = ? ,
+            email = ? ,
+            requested_capital = ?
+            WHERE dni = ?
+            ''', (name, new_dni, email, requested_capital, dni,))
         
-        except Exception as e:
-            # Log exception:
-            print(f"An error occurred: {e}")
-            return jsonify({'error': 'Database operation failed'}), 500
+        conn.commit()
+    
+    except Exception as e:
+        # Log exception:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': 'Database operation failed'}), 500
 
-        finally:
-            conn.close()
+    finally:
+        conn.close()
 
-        # Confirm successful update
-        updated_client = get_client_by_dni(new_dni)
+    # Confirm successful update
+    updated_client = get_client_by_dni(new_dni)
 
-        if updated_client:
-            return jsonify({'message': 'Client successfully updated'}), 200
-        else:
-            return jsonify({'error': 'Update failed'}), 500
-
-    else: 
-        return jsonify({'error': 'Client not found'}), 404
+    if updated_client:
+        return jsonify({'message': 'Client successfully updated'}), 200
+    else:
+        return jsonify({'error': 'Update failed'}), 500
 
 # POST request for Mortgage Simulation
 @app.route('/client/mortgage_sim/<dni>', methods=['POST'])
