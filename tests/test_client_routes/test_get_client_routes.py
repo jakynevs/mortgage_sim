@@ -11,7 +11,7 @@ def client():
 
 def test_get_client(client):
 
-    test_dni = "24681357B"
+    test_dni = "12345666W"
 
     # Send a GET request to the '/client/<dni>' endpoint
     response = client.get(f'/client/{test_dni}')

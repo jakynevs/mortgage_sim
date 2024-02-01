@@ -195,7 +195,7 @@ def delete_client(dni):
 
         # Confirmation that client has been deleted
         if not client:
-            return jsonify({'message': 'Resource deleted successfully'}), 200
+            return jsonify({'message': 'Client deleted successfully'}), 200
         
         # Error handling if still a matching client with given DNI
         else:
