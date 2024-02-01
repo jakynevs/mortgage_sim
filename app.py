@@ -91,8 +91,8 @@ def add_client():
     
     expected_fields = {'name', 'dni', 'email', 'requested_capital'}
     data = request.json
-    
-    # Make sure there is a request body:
+     
+    # Check there is a request body:
     if not data:
         return jsonify({"error": "Empty request body"}), 400
 
@@ -101,7 +101,7 @@ def add_client():
     if unexpected_fields:
         return jsonify({"error": f"Unexpected fields: {unexpected_fields}"}), 400
 
-    # Breakdown of client data
+    # Breakdown of client data:
     name = data.get('name')
     dni = data.get('dni')
     email = data.get('email')
