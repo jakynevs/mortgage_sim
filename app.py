@@ -1,4 +1,4 @@
-from db_setup import create_connection
+from db.db_setup import create_connection
 from flask import Flask, jsonify, request
 import re
 

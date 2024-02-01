@@ -1,6 +1,4 @@
-import json
 import pytest
-from db_setup import create_connection
 from app import app  
 
 @pytest.fixture
