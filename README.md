@@ -37,13 +37,22 @@ git clone https://github.com/jakynevs/mortgage_sim
 pip install -r requirements.txt
 ```
 
-3. Ejecute la aplicación:
+3. Configuración de la Base de Datos:
+
+Antes de ejecutar la aplicación, asegúrese de configurar la base de datos. Hay dos scripts importantes para preparar su entorno de base de datos:
+
+- **db_setup.py**: Utilice este script para crear el esquema de la base de datos.
+- **populate_db.py**: Este script poblara la base de datos con datos de prueba iniciales.
+
+**Importante**: Deberá modificar el nombre de la base de datos en ambos scripts (db_setup.py y populate_db.py) dependiendo de sus preferencias y entorno.
+
+4. Ejecute la aplicación:
 
 ```bash
 python app.py
 ```
 
-4. Acceda a la API a través de la siguiente URL local:
+5. Acceda a la API a través de la siguiente URL local:
 
 ```bash
 http://localhost:5000
