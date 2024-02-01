@@ -48,6 +48,9 @@ def valid_name(name):
 
 # Function to validate email input
 def valid_email(email):
+    if type(email) != str:
+        return False
+    
     email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
     if not re.fullmatch(email_regex, email):
         return False
