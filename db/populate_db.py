@@ -27,7 +27,9 @@ def main():
     test_clients = [
         ('John Doe', '77654321L', 'john.doe@example.com', 25000.0),
         ('Jane Smith', '12345666W', 'jane.smith@example.com', 30000.0),
-        # Add more test clients as needed
+        ('Miguel Ángel López', '04567890K', 'miguel.angel@example.com', 150000),
+        ('Elena Rodríguez', '04567891E', 'elena.rodriguez@example.com', 30000)
+        # Add more test clients if needed
     ]
 
     # Insert test data into the table
