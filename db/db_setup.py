@@ -1,7 +1,9 @@
 import sqlite3
 from sqlite3 import Error
 
-def create_connection(database):
+database = "db/mortgage.db"
+
+def create_connection():
     """ create a database connection to the SQLite database
         specified by db_file
     :param db_file: database file
@@ -28,7 +30,6 @@ def create_table(conn, create_table_sql):
         print(e)
         
 def main():
-    database = "db/test_database.db"
 
     # SQL command to create client table
     sql_create_clients_table = """ CREATE TABLE IF NOT EXISTS Client (
@@ -51,7 +52,7 @@ def main():
                       );"""
     
     # Create the db connection
-    conn = create_connection(database)
+    conn = create_connection()
 
     # Create the db tables
     if conn is not None:

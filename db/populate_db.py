@@ -1,6 +1,8 @@
 import sqlite3
 
-def create_connection(db_file):
+db_file = 'test_database.db'
+
+def create_connection():
     conn = None
     try:
         conn = sqlite3.connect(db_file)
@@ -21,7 +23,7 @@ def main():
     database = "db/test_database.db"
 
     # Create a database connection
-    conn = create_connection(database)
+    conn = create_connection()
 
     # Test data for the Client table
     test_clients = [
