@@ -9,7 +9,9 @@ app = Flask(__name__)
 def valid_dni(dni):
     
     # Check is 9 digits and a sting:
-    if len(dni) != 9 or type(dni) != str:
+    if type(dni) != str:
+        return False
+    if len(dni) != 9:
         return False
     
     # Official table numbers corresponding from 0 > 22 
@@ -26,7 +28,10 @@ def valid_dni(dni):
         dni = "2" + dni[1:]
     
     # Get number part of dni
-    number = int(dni[:-1])
+    try:
+        number = int(dni[:-1])
+    except:
+        return False
 
     # Get last letter of dni
     letter = dni[-1].upper()

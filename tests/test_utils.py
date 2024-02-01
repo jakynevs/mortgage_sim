@@ -5,7 +5,7 @@ def test_valid_dni():
     # Test valid DNI
     assert valid_dni("12244896H") == True  
     # Test valid forigners DNI
-    assert valid_dni("X2244896H") == True  
+    assert valid_dni("X2244896G") == True  
 
     # Test invalid DNI (wrong length, wrong format, etc.)
     assert valid_dni("1234") == False
