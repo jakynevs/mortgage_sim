@@ -1,6 +1,7 @@
 import sqlite3
 
-db_file = 'test_database.db'
+db_file = "test_database.db"
+
 
 def create_connection():
     conn = None
@@ -11,13 +12,15 @@ def create_connection():
         print(e)
     return conn
 
+
 def create_client(conn, client):
-    sql = ''' INSERT INTO Client(name,dni,email,requested_capital)
-              VALUES(?,?,?,?) '''
+    sql = """ INSERT INTO Client(name,dni,email,requested_capital)
+              VALUES(?,?,?,?) """
     cur = conn.cursor()
     cur.execute(sql, client)
     conn.commit()
     return cur.lastrowid
+
 
 def main():
     database = "db/test_database.db"
@@ -27,10 +30,10 @@ def main():
 
     # Test data for the Client table
     test_clients = [
-        ('John Doe', '77654321L', 'john.doe@example.com', 25000.0),
-        ('Jane Smith', '12345666W', 'jane.smith@example.com', 30000.0),
-        ('Miguel Ángel López', '04567890K', 'miguel.angel@example.com', 150000),
-        ('Elena Rodríguez', '04567891E', 'elena.rodriguez@example.com', 30000)
+        ("John Doe", "77654321L", "john.doe@example.com", 25000.0),
+        ("Jane Smith", "12345666W", "jane.smith@example.com", 30000.0),
+        ("Miguel Ángel López", "04567890K", "miguel.angel@example.com", 150000),
+        ("Elena Rodríguez", "04567891E", "elena.rodriguez@example.com", 30000),
         # Add more test clients if needed
     ]
 
@@ -46,5 +49,6 @@ def main():
     if conn:
         conn.close()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
