@@ -1,8 +1,6 @@
 
 # API de Simulación de Hipoteca
 
-![Imagen de Encabezado](http://tinyurl.com/3rcww63x)
-
 ## Descripción del Proyecto
 
 Este proyecto es una API de simulación de hipoteca diseñada para calcular estimaciones de préstamos hipotecarios. Puede ser utilizada de manera rápida y sencilla para estimar sus pagos hipotecarios mensuales y totales.
@@ -58,4 +56,3 @@ python app.py
 http://localhost:5000
 ```
 
-Gracias por darme la oportunidad. Espero que el proyecto cumpla con todos los requisitos. Si tienen alguna pregunta, no duden en enviarme un correo electrónico.
